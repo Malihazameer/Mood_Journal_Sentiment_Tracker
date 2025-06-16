@@ -13,6 +13,14 @@ def analyze_mood(text):
             return "Sad 😞"
     return "Neutral 😐"
 
+def recommend_activity(mood):
+    recommendations = {
+        "Happy 😊": "Keep up the great vibes! How about going for a walk or celebrating with friends?",
+        "Sad 😞": "Maybe try some relaxation like listening to your favorite music or journaling your thoughts.",
+        "Neutral 😐": "How about a light activity like reading a book or meditating to boost your mood?"
+    }
+    return recommendations.get(mood, "Try to take some time for yourself today!")
+
 #creating user profile
 class UserProfile:
   def __init__(self,name):
@@ -81,6 +89,51 @@ class UserProfile:
         print("All mood entries have been erased.")
     else:
         print("Action cancelled.")
+  def get_weekly_summary(self):
+    if not self.mood_entries:
+        print("No mood entries to summarize.")
+        return
+
+    weekly_summary = {}
+
+    for date_str, entry in self.mood_entries.items():
+        date = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        year_week = date.isocalendar()[:2]  # (year, week)
+
+        if year_week not in weekly_summary:
+            weekly_summary[year_week] = []
+        weekly_summary[year_week].append(entry['mood'])
+
+    print("\n📊 Weekly Mood Summary:")
+    for (year, week), moods in sorted(weekly_summary.items()):
+        mood_counts = {}
+
+        for mood in moods:
+            if mood in mood_counts:
+                mood_counts[mood] += 1
+            else:
+                mood_counts[mood] = 1
+
+        most_common_mood = max(mood_counts, key=mood_counts.get)
+        print(f"\n🗓️ Week {week} of {year}")
+        print(f"   Total Entries: {len(moods)}")
+        print(f"   Most Common Mood: {most_common_mood}")
+        for mood, count in mood_counts.items():
+            print(f"   - {mood}: {count}")
+  def show_recommendation(self):
+        if not self.mood_entries:
+            print("No mood entries found. Please add an entry first.")
+            return
+        
+        # Get the most recent entry based on date keys
+        last_date = max(self.mood_entries.keys())
+        last_mood = self.mood_entries[last_date]['mood']
+        
+        activity = recommend_activity(last_mood)
+        print(f"Based on your last mood ({last_mood}), we recommend:\n  {activity}")
+  
+
+
 
 # Main Program
 def main():
@@ -94,8 +147,10 @@ def main():
         print("\nMenu:")
         print("1. Add Mood Entry")
         print("2. View Mood History")
-        print("3. Erase All Mood Entries")
-        print("4. Exit")
+        print("3. View Weekly Mood Summary")
+        print("4. Recommend Activity")
+        print("5. Erase All Mood Entries")
+        print("6. Exit")
 
         choice = input("Choose an option (1-4): ").strip()
 
@@ -104,8 +159,12 @@ def main():
         elif choice == '2':
             user.show_history()
         elif choice == '3':
-            user.clear_journal()
+            user.get_weekly_summary()
         elif choice == '4':
+            user.show_recommendation()
+        elif choice == '5':
+            user.clear_journal()
+        elif choice == '6':
             print("Goodbye!")
             break
         else:
